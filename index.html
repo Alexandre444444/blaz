@@ -3,63 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte des Producteurs Locaux - Morbihan (Icones)</title>
+    <title>Carte des Producteurs Locaux - Morbihan</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        /* Configuration pour que la carte prenne tout l'espace de l'iframe */
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         #map { height: 100vh; width: 100%; }
 
-        /* --- Styles des Popups --- */
+        /* Styles des Popups */
         .custom-popup .leaflet-popup-content-wrapper { border-radius: 8px; }
         .popup-title { font-size: 1.1em; font-weight: bold; color: #2c3e50; border-bottom: 2px solid #e67e22; margin-bottom: 5px;}
         .popup-category { font-size: 0.85em; text-transform: uppercase; color: #7f8c8d; font-weight: bold; margin-bottom: 5px; }
         .popup-desc { font-size: 0.95em; color: #34495e; }
         .popup-addr { font-size: 0.85em; color: #7f8c8d; margin-top: 8px; font-style: italic; }
 
-        /* --- Styles des Marqueurs Personnalisés (Épingles CSS) --- */
-        /* Le conteneur global du marqueur */
-        .custom-marker-container {
-            /* Nécessaire pour le centrage */
-        }
-        
-        /* La forme de l'épingle */
+        /* Styles des Marqueurs (Épingles) */
         .marker-pin {
-            width: 36px;
-            height: 36px;
-            border-radius: 50% 50% 50% 0;
-            /* On utilise une variable CSS pour la couleur dynamique */
+            width: 36px; height: 36px; border-radius: 50% 50% 50% 0;
             background: var(--marker-color, #95a5a6); 
-            position: absolute;
-            transform: rotate(-45deg);
-            left: 50%;
-            top: 50%;
-            margin: -18px 0 0 -18px;
+            position: absolute; transform: rotate(-45deg);
+            left: 50%; top: 50%; margin: -18px 0 0 -18px;
             box-shadow: -3px 3px 5px rgba(0,0,0,0.3);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
         }
+        .marker-pin i { transform: rotate(45deg); color: white; font-size: 16px; }
 
-        /* L'icône Font Awesome à l'intérieur */
-        .marker-pin i {
-            transform: rotate(45deg); /* On redresse l'icône */
-            color: white;
-            font-size: 16px;
-        }
-        
-        /* --- Légende --- */
+        /* Légende */
         .legend {
             padding: 10px; background: white; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2);
             position: absolute; bottom: 30px; left: 20px; z-index: 1000; font-size: 12px;
         }
         .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
         .legend-color { width: 15px; height: 15px; margin-right: 8px; border-radius: 3px; }
-
     </style>
 </head>
 <body>
@@ -78,15 +57,14 @@
     </div>
 
     <script>
-        // 1. Initialisation de la carte
         var map = L.map('map').setView([47.65, -2.80], 10);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19, attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // 2. Base de données (Identique à la précédente)
-        const producteurs = [
-            // ... Ostréiculture ...
+        // Liste brute des producteurs
+        const rawProducteurs = [
+            { lat: 47.526, lng: -2.764, cat: "Épicerie Vrac", nom: "Les Saveurs du Colibris", desc: "Épicerie fine, vrac, produits locaux.", addr: "Sarzeau Centre" },
             { lat: 47.525, lng: -2.553, cat: "Ostréiculture", nom: "Les Viviers de Banastère", desc: "Huîtres, coquillages, dégustation vue sur claires.", addr: "Le Tour-du-Parc" },
             { lat: 47.530, lng: -2.775, cat: "Ostréiculture", nom: "Les Viviers du Ruault", desc: "Huîtres creuses de Bretagne, palourdes.", addr: "Sarzeau" },
             { lat: 47.570, lng: -2.970, cat: "Ostréiculture", nom: "Maison Quintin", desc: "Huîtres de la Baie de Quiberon, fruits de mer.", addr: "Saint-Philibert" },
@@ -95,14 +73,12 @@
             { lat: 47.610, lng: -2.825, cat: "Ostréiculture", nom: "Huitres Jegat", desc: "Ostréiculteur, vente d'huîtres du Golfe.", addr: "Arradon" },
             { lat: 47.605, lng: -2.730, cat: "Ostréiculture", nom: "La Belle d'Ilur", desc: "Ostréiculteur, dégustation et vente.", addr: "Séné" },
             { lat: 47.572, lng: -2.968, cat: "Poissonnerie", nom: "Les Viviers de St Phil", desc: "Vente de fruits de mer et crustacés au détail.", addr: "Saint-Philibert" },
-            // ... Fromagerie ...
             { lat: 47.575, lng: -2.632, cat: "Produits Laitiers", nom: "Ferme de Kerlis", desc: "Ferme laitière, lait, crème, fromages.", addr: "Surzur" },
             { lat: 47.505, lng: -2.730, cat: "Fromagerie", nom: "Ferme Fromagère de Suscinio", desc: "Tome de Rhuys, fromages vache.", addr: "Sarzeau" },
             { lat: 47.620, lng: -2.720, cat: "Fromagerie", nom: "Ferme de Kerlebik", desc: "Chèvrerie, crottins, tomme.", addr: "Séné" },
             { lat: 47.665, lng: -2.985, cat: "Fromagerie", nom: "La Ferme Fromagère d'Auray", desc: "Fromages fermiers.", addr: "Auray" },
             { lat: 47.515, lng: -2.380, cat: "Fromagerie", nom: "Ferme de Kerdavid", desc: "Produits laitiers bio, gros lait.", addr: "Arzal" },
             { lat: 48.030, lng: -3.090, cat: "Fromagerie", nom: "Ferme de la Sablonnière", desc: "Fromages de vache bio.", addr: "Guern" },
-            // ... Boissons ...
             { lat: 47.578, lng: -2.636, cat: "Brasserie", nom: "Brasserie de Rhuys (La P'tite Mamm)", desc: "Bière bio artisanale.", addr: "Surzur" },
             { lat: 47.695, lng: -2.655, cat: "Brasserie", nom: "Brasserie La Dilettante", desc: "Bières locales (La Flemme).", addr: "Saint-Nolff" },
             { lat: 47.625, lng: -2.650, cat: "Brasserie", nom: "Brasserie Domani", desc: "Micro-brasserie artisanale.", addr: "Theix-Noyalo" },
@@ -116,7 +92,6 @@
             { lat: 47.615, lng: -2.830, cat: "Cidrerie", nom: "Cidrerie du Golfe", desc: "Cidre bio, P'tit Fausset.", addr: "Arradon" },
             { lat: 47.700, lng: -3.100, cat: "Cidrerie", nom: "Cidrerie du Pays d'Auray", desc: "Cidre fermier.", addr: "Locoal-Mendon" },
             { lat: 47.656, lng: -2.760, cat: "Cidrerie", nom: "KYSTIN", desc: "Cidre artisanal haut de gamme.", addr: "Vannes" },
-            // ... Viandes ...
             { lat: 47.690, lng: -2.735, cat: "Viande", nom: "GAEC des 3 Horizons", desc: "Viande bovine Blonde d'Aquitaine.", addr: "Saint-Avé" },
             { lat: 47.612, lng: -2.740, cat: "Volaille/Oeufs", nom: "Volailles Sinagotes", desc: "Volailles fermières et oeufs.", addr: "Séné" },
             { lat: 47.618, lng: -2.835, cat: "Viande", nom: "GAEC de La Ferme de l'Etang", desc: "Viande bovine et produits fermiers.", addr: "Arradon" },
@@ -124,7 +99,6 @@
             { lat: 48.050, lng: -2.920, cat: "Viande/Epicerie", nom: "Ferme Lis Ar Parkou", desc: "Viande bovine, œufs, farine.", addr: "Noyal-Pontivy" },
             { lat: 47.675, lng: -2.570, cat: "Charcuterie", nom: "La ferme de Coët-Navalen", desc: "Porc, charcuterie à la ferme.", addr: "Sulniac" },
             { lat: 47.575, lng: -2.720, cat: "Viande", nom: "La ferme de l'île de Tascon", desc: "Viande bovine Aubrac insulaire.", addr: "Saint-Armel" },
-            // ... Maraîchage ...
             { lat: 47.680, lng: -2.950, cat: "Maraîchage", nom: "Le jardin du Penher", desc: "Producteur fruits et légumes.", addr: "Pluneret" },
             { lat: 47.655, lng: -2.800, cat: "Maraîchage", nom: "Ferme de Kerverec", desc: "Légumes de saison.", addr: "Ploeren" },
             { lat: 47.560, lng: -2.620, cat: "Maraîchage", nom: "Le Jardin de Brarun", desc: "Vente directe fruits et légumes.", addr: "Surzur" },
@@ -133,8 +107,6 @@
             { lat: 47.630, lng: -2.850, cat: "Maraîchage/Céréales", nom: "Ferme de Lignol", desc: "Ferme bio, légumes, farines.", addr: "Arradon" },
             { lat: 47.650, lng: -2.820, cat: "Maraîchage", nom: "La Cueillette Ploeren Arradon", desc: "Cueillette libre service.", addr: "Ploeren" },
             { lat: 47.710, lng: -3.120, cat: "Maraîchage", nom: "Ferme de Keruzerh", desc: "Légumes bio sol vivant.", addr: "Locoal-Mendon" },
-            // ... Divers ...
-            { lat: 47.526, lng: -2.764, cat: "Épicerie Vrac", nom: "Les Saveurs du Colibris", desc: "Épicerie fine, vrac, produits locaux.", addr: "Sarzeau Centre" },
             { lat: 47.576, lng: -2.633, cat: "Épicerie Vrac", nom: "L'Odyssée du Vrac", desc: "Magasin vrac, zéro déchet.", addr: "Surzur" },
             { lat: 47.480, lng: -3.120, cat: "Conserverie", nom: "Conserverie La Quiberonnaise", desc: "Sardines millésimées.", addr: "Quiberon" },
             { lat: 47.640, lng: -3.450, cat: "Conserverie", nom: "Groix & Nature", desc: "Rillettes de poissons, huile de homard.", addr: "Île de Groix" },
@@ -156,55 +128,48 @@
             { lat: 47.615, lng: -2.735, cat: "Magasin Bio", nom: "Le Local Bio", desc: "Magasin bio, produits locaux.", addr: "Séné" }
         ];
 
+        // SUPPRESSION DES DOUBLONS AUTOMATIQUE
+        const uniqueProducteurs = [...new Map(rawProducteurs.map(item => [item.nom, item])).values()];
 
-        // 3. Fonction pour déterminer le style (couleur et icône) selon la catégorie
+        // Fonction Styles
         function getStyleForCategory(cat) {
-            // On regroupe les catégories similaires
             if (["Ostréiculture", "Poissonnerie", "Sel", "Superaliment", "Héliciculture"].some(c => cat.includes(c))) {
-                return { color: "#0077be", icon: "fa-fish" }; // Bleu foncé - Mer
+                return { color: "#0077be", icon: "fa-fish" };
             }
             if (["Fromagerie", "Produits Laitiers"].some(c => cat.includes(c))) {
-                return { color: "#f1c40f", icon: "fa-cheese" }; // Jaune - Lait
+                return { color: "#f1c40f", icon: "fa-cheese" };
             }
             if (["Brasserie", "Cidrerie"].some(c => cat.includes(c))) {
-                return { color: "#d35400", icon: "fa-beer-mug-empty" }; // Orange foncé - Boissons
+                return { color: "#d35400", icon: "fa-beer-mug-empty" };
             }
             if (["Viande", "Volaille", "Charcuterie"].some(c => cat.includes(c))) {
-                return { color: "#c0392b", icon: "fa-cow" }; // Rouge - Viande
+                return { color: "#c0392b", icon: "fa-cow" };
             }
             if (["Maraîchage", "Épices", "Apiculture"].some(c => cat.includes(c))) {
-                return { color: "#27ae60", icon: "fa-carrot" }; // Vert - Végétal
+                return { color: "#27ae60", icon: "fa-carrot" };
             }
             if (["Épicerie", "Magasin", "Bio", "Producteurs"].some(c => cat.includes(c))) {
-                return { color: "#8e44ad", icon: "fa-basket-shopping" }; // Violet - Magasins
+                return { color: "#8e44ad", icon: "fa-basket-shopping" };
             }
             if (["Conserverie", "Biscuiterie"].some(c => cat.includes(c))) {
-                return { color: "#795548", icon: "fa-cookie-bite" }; // Marron - Artisanat
+                return { color: "#795548", icon: "fa-cookie-bite" };
             }
-            // Par défaut
-            return { color: "#95a5a6", icon: "fa-map-pin" }; // Gris
+            return { color: "#95a5a6", icon: "fa-map-pin" };
         }
 
-        // 4. Boucle de création des marqueurs
-        producteurs.forEach(prod => {
-            // On récupère le style correspondant à la catégorie
+        // Création des marqueurs
+        uniqueProducteurs.forEach(prod => {
             const style = getStyleForCategory(prod.cat);
-
-            // On crée l'icône personnalisée (HTML/CSS)
             const customIcon = L.divIcon({
                 className: 'custom-marker-container',
-                html: `<div class="marker-pin" style="--marker-color: ${style.color};">
-                         <i class="fa-solid ${style.icon}"></i>
-                       </div>`,
-                iconSize: [40, 40], // Taille de la zone de l'icône
-                iconAnchor: [20, 40], // Point d'ancrage (la pointe en bas)
-                popupAnchor: [0, -35] // Position du popup par rapport à l'ancre
+                html: `<div class="marker-pin" style="--marker-color: ${style.color};"><i class="fa-solid ${style.icon}"></i></div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -35]
             });
 
-            // On ajoute le marqueur avec l'icône personnalisée
             var marker = L.marker([prod.lat, prod.lng], {icon: customIcon}).addTo(map);
 
-            // Contenu du popup
             var popupContent = `
                 <div class="custom-popup">
                     <div class="popup-title">${prod.nom}</div>
@@ -213,11 +178,9 @@
                     <div class="popup-addr">📍 ${prod.addr}</div>
                 </div>
             `;
-
             marker.bindPopup(popupContent);
             marker.on('mouseover', function (e) { this.openPopup(); });
         });
-
     </script>
 </body>
 </html>
